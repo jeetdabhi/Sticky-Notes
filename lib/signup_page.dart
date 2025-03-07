@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:sticky_note/otp_page.dart';
 import 'package:sticky_note/signin_page.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -13,11 +16,49 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // ✅ Form is valid, proceed with signup logic
-      print("Form Submitted Successfully!");
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final response = await http.post(
+          Uri.parse("http://localhost:3000/api/users/register"),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            "email": emailController.text, // ✅ Ensure email is sent
+          }),
+        );
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("OTP Send successful! Enter OTP.")),
+          );
+
+          // ✅ Pass email to OTP popup
+          showOtpPopup(context, emailController.text);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    "Signup failed: ${jsonDecode(response.body)['message']}")),
+          );
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("An error occurred. Please try again.")),
+        );
+      }
     }
   }
 
@@ -31,7 +72,8 @@ class _SignUpPageState extends State<SignUpPage> {
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: 400),
-              child: Form( // ✅ Wrap with Form
+              child: Form(
+                // ✅ Wrap with Form
                 key: _formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -69,65 +111,14 @@ class _SignUpPageState extends State<SignUpPage> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "No email provided!";
-                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                            .hasMatch(value)) {
                           return "Invalid email format!";
                         }
                         return null;
                       },
                     ),
                     SizedBox(height: 12),
-
-                    // Full Name Field
-                    TextFormField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        labelText: "Full Name",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "No name provided!";
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 12),
-
-
-                    // Password Field
-                    TextFormField(
-                      controller: passwordController,
-                      obscureText: !_isPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: "Password",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "No password provided!";
-                        } else if (value.length < 6) {
-                          return "Password must be at least 6 characters!";
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 20),
 
                     // Signup Button
                     ElevatedButton(
@@ -141,7 +132,8 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFFB1902B),
-                        padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -234,4 +226,3 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
-

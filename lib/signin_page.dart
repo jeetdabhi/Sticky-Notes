@@ -22,7 +22,7 @@ class _SigninPageState extends State<SignInPage> {
       String email = emailController.text.trim();
       String password = passwordController.text.trim();
 
-      var url = Uri.parse("http://192.168.0.123:3000/api/user/login");
+      var url = Uri.parse("http://localhost:3000/api/users/login");
       print("Sending request to: $url");
 
       try {
