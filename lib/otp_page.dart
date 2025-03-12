@@ -3,12 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:sticky_note/notes.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OtpPopup extends StatefulWidget {
   final String email;
 
-  const OtpPopup({Key? key, required this.email}) : super(key: key);
+  const OtpPopup({super.key, required this.email});
 
   @override
   OtpPopupState createState() => OtpPopupState();
@@ -33,21 +33,32 @@ class OtpPopupState extends State<OtpPopup> {
   }
 
   Future<void> _verifyOTP() async {
+     String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
     String otp = controllers.map((controller) => controller.text).join();
 
-    final url = Uri.parse('http://localhost:3000/api/otp/verify-otp');
+    final url = Uri.parse('$apiUrl/api/otp/verify-otp');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': widget.email, 'otp': otp}),
     );
-    print("Response Status: ${response.statusCode}");
-    print("Response Body: ${response.body}");
+
     final responseData = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      _showMessage("OTP verify successfully!");
+
+    if (!mounted) return; // Ensure widget is mounted
+
+    if (response.statusCode == 201) {
+      String verifiedEmail =
+          responseData['email']; // Extract email from response
+      _showMessage("OTP verified successfully!", isSuccess: true);
       removeOtpPopup();
-      Navigator.pushReplacementNamed(context, '/notes');
+
+      // Navigate to Signup page with email as argument
+      Navigator.pushReplacementNamed(
+        context,
+        "/signup",
+        arguments: {'email': verifiedEmail},
+      );
     } else {
       _showMessage(responseData['message'] ?? "Invalid OTP. Try again.");
     }
@@ -57,7 +68,7 @@ class OtpPopupState extends State<OtpPopup> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isSuccess ? Colors.green : Colors.green,
+        backgroundColor: isSuccess ? Colors.green : Colors.red,
       ),
     );
   }
@@ -83,11 +94,11 @@ class OtpPopupState extends State<OtpPopup> {
                   color: Colors.transparent,
                   child: Container(
                     width: 320,
-                    padding: EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10,
@@ -98,7 +109,7 @@ class OtpPopupState extends State<OtpPopup> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
+                        const Text(
                           'Enter OTP',
                           style: TextStyle(
                             fontSize: 28,
@@ -106,16 +117,16 @@ class OtpPopupState extends State<OtpPopup> {
                             color: Color(0xFFB1902B),
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: List.generate(6, (index) {
                             return SizedBox(
                               width: 40,
-                              child: RawKeyboardListener(
+                              child: KeyboardListener(
                                 focusNode: FocusNode(),
-                                onKey: (RawKeyEvent event) {
-                                  if (event is RawKeyDownEvent &&
+                                onKeyEvent: (KeyEvent event) {
+                                  if (event is KeyDownEvent &&
                                       event.logicalKey ==
                                           LogicalKeyboardKey.backspace) {
                                     _onBackspace(index);
@@ -141,19 +152,19 @@ class OtpPopupState extends State<OtpPopup> {
                             );
                           }),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: _verifyOTP,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFFB1902B),
-                            padding: EdgeInsets.symmetric(
+                            backgroundColor: const Color(0xFFB1902B),
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 96, vertical: 15),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
                             elevation: 5,
                           ),
-                          child: Text(
+                          child: const Text(
                             'Verify',
                             style: TextStyle(
                               fontSize: 16,
@@ -181,7 +192,6 @@ void showOtpPopup(BuildContext context, String email) {
   _overlayEntry = OverlayEntry(
     builder: (context) => OtpPopup(email: email),
   );
-
   Overlay.of(context).insert(_overlayEntry!);
 }
 

@@ -4,13 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:sticky_note/otp_page.dart';
 import 'package:sticky_note/signin_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class SignUpPage extends StatefulWidget {
+
+class registerPage extends StatefulWidget {
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _SignUpPageState extends State<registerPage> {
   final _formKey = GlobalKey<FormState>(); // ✅ Form key for validation
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -25,8 +27,9 @@ class _SignUpPageState extends State<SignUpPage> {
       });
 
       try {
+         String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
         final response = await http.post(
-          Uri.parse("http://localhost:3000/api/users/register"),
+          Uri.parse("$apiUrl/api/users/register"),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             "email": emailController.text, // ✅ Ensure email is sent

@@ -1,27 +1,25 @@
-// import 'package:flutter/material.dart';
-// import 'package:sticky_note/notes.dart';
-// import 'package:sticky_note/signup_page.dart'; // Adjust the path based on your project structure
-
-// void main() {
-//   runApp(MaterialApp(
-//     home: NotesScreen(),
-//   ));
-// }
-
-
 import 'package:flutter/material.dart';
-import 'package:sticky_note/notes.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:sticky_note/newnotes.dart';
 import 'package:sticky_note/signin_page.dart';
-import 'package:sticky_note/signup_page.dart';
+import 'package:sticky_note/register.dart';
+import 'package:sticky_note/signup.dart';
+import 'package:sticky_note/notes.dart';
 
-void main() {
+Future<void> main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+   // ✅ Load .env from assets folder (for Flutter Web)
+  await dotenv.load(fileName: "assets/.env");
+
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    initialRoute: '/signin', // Start with SignInPage
+    initialRoute: '/signin',
     routes: {
       '/signin': (context) => SignInPage(),
-      '/signup': (context) => SignUpPage(),
+      '/register': (context) => registerPage(),
       '/notes': (context) => NotesScreen(),
+      '/signup': (context) => SignUpPage(),
+      '/newnote': (context) => NewNotePage(),
     },
   ));
 }

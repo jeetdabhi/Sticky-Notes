@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:sticky_note/logout.dart';
+import 'package:sticky_note/newnotes.dart';
+
+void main() {
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: NotesScreen(),
+  ));
+}
 
 class NotesScreen extends StatelessWidget {
   @override
@@ -15,7 +24,9 @@ class NotesScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFFB1902B)),
-            onPressed: () {},
+            onPressed: () {
+              showLogoutDialog(context);
+            },
           ),
         ],
       ),
@@ -38,18 +49,15 @@ class NotesScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add note creation logic here
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NewNotePage()),
+          );
         },
-        backgroundColor: Color(0xFFB1902B),
+        backgroundColor: const Color(0xFFB1902B),
         child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }
 }
 
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: NotesScreen(),
-  ));
-}

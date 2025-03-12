@@ -2,7 +2,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:sticky_note/signup_page.dart';
+import 'package:sticky_note/register.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 
 class SignInPage extends StatefulWidget {
   @override
@@ -18,55 +21,64 @@ class _SigninPageState extends State<SignInPage> {
   bool _isPasswordVisible = false;
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      String email = emailController.text.trim();
-      String password = passwordController.text.trim();
+  String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
+  final storage = FlutterSecureStorage(); // Secure storage for token
 
-      var url = Uri.parse("http://localhost:3000/api/users/login");
-      print("Sending request to: $url");
+  if (_formKey.currentState!.validate()) {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
-      try {
-        var response = await http.post(
-          url,
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({"email": email, "password": password}),
+    var url = Uri.parse("$apiUrl/api/users/login");
+    print("Sending request to: $url");
+
+    try {
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email, "password": password}),
+      );
+
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        print("Login Successful: ${data['message']}");
+
+        // Extract JWT token
+        final String token = data["token"];
+        print("JWT Token: $token");
+
+        // Save token securely
+        await storage.write(key: "jwt_token", value: token);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login Successful!")),
         );
 
-        print("Response status: ${response.statusCode}");
-        print("Response body: ${response.body}");
+        // Wait for 1 second before navigating
+        await Future.delayed(Duration(seconds: 1));
 
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          print("Login Successful: ${data['message']}");
+        // Navigate to Home Page after successful login
+        Navigator.pushReplacementNamed(context, "/notes");
+      } else {
+        var errorData = jsonDecode(response.body);
+        print("Login Failed: ${errorData['error']}");
 
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Login Successful!")),
-          );
-
-          // Wait for 1 second before navigating
-          await Future.delayed(Duration(seconds: 1));
-
-          // Navigate to Home Page after successful login
-
-          Navigator.pushReplacementNamed(context, "/notes");
-        } else {
-          var errorData = jsonDecode(response.body);
-          print("Login Failed: ${errorData['error']}");
-
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Login Failed: ${errorData['error']}")),
-          );
-        }
-      } catch (e) {
-        print("Error: $e");
+        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Something went wrong. Please try again!")),
+          SnackBar(content: Text("Login Failed: ${errorData['error']}")),
         );
       }
+    } catch (e) {
+      print("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Something went wrong. Please try again!")),
+      );
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +241,7 @@ class _SigninPageState extends State<SignInPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => SignUpPage()),
+                                      builder: (context) => registerPage()),
                                 );
                               },
                           ),
