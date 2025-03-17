@@ -54,7 +54,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           Fluttertoast.showToast(msg: "Account created successfully!");
-          Navigator.pushReplacementNamed(context, "/notes");
+          Navigator.pushReplacementNamed(context, "/signin");
         } else {
           final responseBody = jsonDecode(response.body);
           _showMessage(responseBody['message'] ?? 'Unknown error');

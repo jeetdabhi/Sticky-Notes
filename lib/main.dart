@@ -13,11 +13,11 @@ Future<void> main() async {
 
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    initialRoute: '/signin',
+    initialRoute: '/notes',
     routes: {
       '/signin': (context) => SignInPage(),
       '/register': (context) => registerPage(),
-      '/notes': (context) => NotesScreen(),
+      '/notes': (context) => NotesListScreen(),
       '/signup': (context) => SignUpPage(),
       '/newnote': (context) => NewNotePage(),
     },

@@ -39,7 +39,7 @@ dependencies:
   flutter_otp_text_field: ^1.5.1+1
   fluttertoast: ^8.2.4
   flutter_dotenv: ^5.2.1
-  flutter_secure_storage: ^9.0.0 # Use latest version
+  flutter_secure_storage: ^9.2.4 # Use latest version
 
 dev_dependencies:
   flutter_test:

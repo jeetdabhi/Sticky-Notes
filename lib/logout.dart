@@ -1,4 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void showLogoutDialog(BuildContext context) {
   showDialog(
@@ -8,16 +14,16 @@ void showLogoutDialog(BuildContext context) {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        backgroundColor: Colors.white, // Ensuring white background
+        backgroundColor: Colors.white,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white, // Set white background explicitly
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
           ),
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 "Do you want to sign out of the app?",
@@ -29,19 +35,19 @@ void showLogoutDialog(BuildContext context) {
               ),
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end, // Move buttons to the right
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   // No Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white, // Ensure button is white
-                      side: const BorderSide(color: Color(0xFFB1902B)), // Border color
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFB1902B)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     onPressed: () {
-                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.of(context).pop();
                     },
                     child: const Text(
                       "No",
@@ -49,7 +55,7 @@ void showLogoutDialog(BuildContext context) {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Yes Button
+                  // Yes Button (Calls logout function)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFB1902B),
@@ -58,10 +64,11 @@ void showLogoutDialog(BuildContext context) {
                       ),
                       elevation: 5,
                     ),
-                    onPressed: () {
-                      // Call your logout function here
-                      Navigator.of(context).pop();
-                      print("User logged out"); // Replace with actual logout logic
+                    onPressed: () async {
+                      await logoutUser(context);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
                     },
                     child: const Text(
                       "Yes",
@@ -75,5 +82,57 @@ void showLogoutDialog(BuildContext context) {
         ),
       );
     },
+  );
+}
+
+Future<void> logoutUser(BuildContext context) async {
+  String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
+
+  // Create an instance of secure storage
+  const storage = FlutterSecureStorage();
+
+  // Retrieve the stored token
+  String? token = await storage.read(key: "jwt_token");
+
+  if (token == null) {
+    Fluttertoast.showToast(msg: "No token found. Please log in.");
+    return;
+  }
+
+  try {
+    final response = await http.post(
+      Uri.parse("$apiUrl/api/users/logout"),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Use the retrieved token
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      Fluttertoast.showToast(msg: "Logged out successfully!");
+
+      // Remove token from storage after logout
+      await storage.delete(key: "jwt_token");
+
+      await Navigator.pushReplacementNamed(
+          context, "/signin"); // Navigate only if widget is still active
+    } else {
+      final responseBody = jsonDecode(response.body);
+      _showMessage(context, responseBody['message'] ?? 'Logout failed');
+    }
+  } on SocketException {
+    _showMessage(context, "No internet connection.");
+  } catch (e) {
+    _showMessage(context, "An error occurred: $e");
+  }
+}
+
+void _showMessage(BuildContext context, String message,
+    {bool isSuccess = false}) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: isSuccess ? Colors.green : Colors.red,
+    ),
   );
 }

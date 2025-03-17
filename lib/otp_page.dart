@@ -36,7 +36,7 @@ class OtpPopupState extends State<OtpPopup> {
      String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
     String otp = controllers.map((controller) => controller.text).join();
 
-    final url = Uri.parse('$apiUrl/api/otp/verify-otp');
+    final url = Uri.parse('$apiUrl/api/users/verify-otp');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

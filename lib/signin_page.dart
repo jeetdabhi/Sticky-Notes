@@ -38,16 +38,12 @@ class _SigninPageState extends State<SignInPage> {
         body: jsonEncode({"email": email, "password": password}),
       );
 
-      print("Response status: ${response.statusCode}");
-      print("Response body: ${response.body}");
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
-        print("Login Successful: ${data['message']}");
 
         // Extract JWT token
         final String token = data["token"];
-        print("JWT Token: $token");
 
         // Save token securely
         await storage.write(key: "jwt_token", value: token);
@@ -64,7 +60,6 @@ class _SigninPageState extends State<SignInPage> {
         Navigator.pushReplacementNamed(context, "/notes");
       } else {
         var errorData = jsonDecode(response.body);
-        print("Login Failed: ${errorData['error']}");
 
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
