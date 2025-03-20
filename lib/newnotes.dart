@@ -1,10 +1,16 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class NewNotePage extends StatefulWidget {
+  final Map<String, dynamic>? note; // Accept a note for editing
   final String? title;
   final String? content;
 
-  const NewNotePage({super.key, this.title, this.content});
+  const NewNotePage({Key? key, this.note, this.title, this.content})
+      : super(key: key);
 
   @override
   _NewNotePageState createState() => _NewNotePageState();
@@ -13,46 +19,204 @@ class NewNotePage extends StatefulWidget {
 class _NewNotePageState extends State<NewNotePage> {
   late TextEditingController titleController;
   late TextEditingController noteController;
+  final storage = FlutterSecureStorage();
+  bool isUpdating = false;
 
   @override
   void initState() {
     super.initState();
-    titleController = TextEditingController(text: widget.title ?? '');
-    noteController = TextEditingController(text: widget.content ?? '');
+    titleController = TextEditingController(text: widget.note?['title'] ?? '');
+    noteController = TextEditingController(text: widget.note?['content'] ?? '');
+    isUpdating = widget.note != null;
   }
 
-  void saveNote() {
+  /// ✅ Create or Update Note API
+  Future<void> saveNote() async {
     String title = titleController.text.trim();
     String content = noteController.text.trim();
 
-    if (title.isNotEmpty || content.isNotEmpty) {
-      // Pass note data back to previous screen
-      Navigator.pop(context, {'title': title, 'content': content});
-    } else {
+    if (title.isEmpty && content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Note is empty!'), backgroundColor: Colors.red),
+        const SnackBar(
+            content: Text('Note is empty!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    String? token = await storage.read(key: "jwt_token");
+    String? userId = await storage.read(key: "user_id");
+
+    if (token == null || userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('User not logged in! Please log in again.'),
+            backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
+    var url = isUpdating
+        ? Uri.parse("$apiUrl/api/notes/update/${widget.note!['_id']}")
+        : Uri.parse("$apiUrl/api/notes/create");
+
+    try {
+      var response = await (isUpdating
+          ? http.put(url,
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer $token"
+              },
+              body: jsonEncode({"title": title, "content": content}))
+          : http.post(url,
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer $token"
+              },
+              body: jsonEncode({
+                "title": title,
+                "content": content,
+                "date": DateTime.now().toIso8601String(),
+              })));
+
+      var responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isUpdating
+                ? 'Note updated successfully!'
+                : 'Note added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error: ${responseData['error']}'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Something went wrong. Please try again!"),
+            backgroundColor: Colors.red),
       );
     }
+  }
+
+  /// ✅ Move the confirmation dialog inside `_NewNotePageState`
+  void showUpdateConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dialog Title
+                const Text(
+                  "Are you sure you want to update this note?",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Cancel Button (Bordered)
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(
+                            color: Color(0xFFB1902B)), // Gold border
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(color: Color(0xFFB1902B)), // Gold text
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // Update Button (Solid Color)
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFB1902B), // Gold color
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 5,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        saveNote(); // ✅ Calls saveNote() after closing dialog
+                      },
+                      child: const Text(
+                        "Update",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F4F4), // Updated background color
+      backgroundColor: const Color(0xFFF4F4F4),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFB1902B)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: isUpdating
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(0xFFB1902B)),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null, // Hide back button for new notes
         title: Text(
-          widget.title == null ? "New Note" : "Edit Note",
-          style: const TextStyle(color: Color(0xFFB1902B), fontWeight: FontWeight.bold),
+          isUpdating ? "Edit Note" : "New Note",
+          style: const TextStyle(
+              color: Color(0xFFB1902B), fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.check, color: Colors.black),
-            onPressed: saveNote, // Save note on press
+            onPressed: () {
+              if (isUpdating) {
+                showUpdateConfirmationDialog(context);
+              } else {
+                saveNote();
+              }
+            },
           ),
         ],
         elevation: 0,

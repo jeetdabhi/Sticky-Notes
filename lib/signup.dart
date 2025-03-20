@@ -41,7 +41,8 @@ class _SignUpPageState extends State<SignUpPage> {
       setState(() => _isLoading = true);
 
       try {
-         String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
+        String apiUrl =
+            dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
         final response = await http.post(
           Uri.parse("$apiUrl/api/users/signup"),
           headers: {'Content-Type': 'application/json'},
@@ -53,8 +54,12 @@ class _SignUpPageState extends State<SignUpPage> {
         );
 
         if (response.statusCode == 200 || response.statusCode == 201) {
-          Fluttertoast.showToast(msg: "Account created successfully!");
-          Navigator.pushReplacementNamed(context, "/signin");
+          _showMessage("Account created successfully!", isSuccess: true);
+
+          // Delay navigation to allow snackbar to show
+          Future.delayed(Duration(seconds: 2), () {
+            Navigator.pushReplacementNamed(context, "/signin");
+          });
         } else {
           final responseBody = jsonDecode(response.body);
           _showMessage(responseBody['message'] ?? 'Unknown error');
@@ -68,7 +73,8 @@ class _SignUpPageState extends State<SignUpPage> {
       }
     }
   }
- void _showMessage(String message, {bool isSuccess = false}) {
+
+  void _showMessage(String message, {bool isSuccess = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

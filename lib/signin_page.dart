@@ -6,7 +6,6 @@ import 'package:sticky_note/register.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-
 class SignInPage extends StatefulWidget {
   @override
   _SigninPageState createState() => _SigninPageState();
@@ -21,59 +20,61 @@ class _SigninPageState extends State<SignInPage> {
   bool _isPasswordVisible = false;
 
   Future<void> _submitForm() async {
-  String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
-  final storage = FlutterSecureStorage(); // Secure storage for token
+    String apiUrl =
+        dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
+    final storage = FlutterSecureStorage(); // Secure storage for token
 
-  if (_formKey.currentState!.validate()) {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+    if (_formKey.currentState!.validate()) {
+      String email = emailController.text.trim();
+      String password = passwordController.text.trim();
 
-    var url = Uri.parse("$apiUrl/api/users/login");
-    print("Sending request to: $url");
+      var url = Uri.parse("$apiUrl/api/users/login");
 
-    try {
-      var response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
-      );
-
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-
-        // Extract JWT token
-        final String token = data["token"];
-
-        // Save token securely
-        await storage.write(key: "jwt_token", value: token);
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Login Successful!")),
+      try {
+        var response = await http.post(
+          url,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({"email": email, "password": password}),
         );
 
-        // Wait for 1 second before navigating
-        await Future.delayed(Duration(seconds: 1));
+        if (response.statusCode == 200) {
+          var data = jsonDecode(response.body);
 
-        // Navigate to Home Page after successful login
-        Navigator.pushReplacementNamed(context, "/notes");
-      } else {
-        var errorData = jsonDecode(response.body);
+          // Extract JWT token and userId
+          final String token = data["token"];
+          final String userId =
+              data["userId"]; // ✅ Fix: Ensure userId is stored
 
-        // Show error message
+          // Save token and userId securely
+          await storage.write(key: "jwt_token", value: token);
+          await storage.write(key: "user_id", value: userId); // ✅ Store user ID
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Login Successful!")),
+          );
+
+          // Wait for 1 second before navigating
+          await Future.delayed(const Duration(seconds: 1));
+
+          // Navigate to Notes Page after successful login
+          Navigator.pushReplacementNamed(context, "/notes");
+        } else {
+          var errorData = jsonDecode(response.body);
+
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Login Failed: ${errorData['error']}")),
+          );
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Login Failed: ${errorData['error']}")),
+          const SnackBar(
+              content: Text("Something went wrong. Please try again!")),
         );
       }
-    } catch (e) {
-      print("Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Something went wrong. Please try again!")),
-      );
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {

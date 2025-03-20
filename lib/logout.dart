@@ -95,7 +95,7 @@ Future<void> logoutUser(BuildContext context) async {
   String? token = await storage.read(key: "jwt_token");
 
   if (token == null) {
-    Fluttertoast.showToast(msg: "No token found. Please log in.");
+    _showMessage(context, "No token found. Please log in.");
     return;
   }
 
@@ -109,10 +109,18 @@ Future<void> logoutUser(BuildContext context) async {
     );
 
     if (response.statusCode == 200 || response.statusCode == 204) {
-      Fluttertoast.showToast(msg: "Logged out successfully!");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Logged out successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
 
       // Remove token from storage after logout
       await storage.delete(key: "jwt_token");
+
+      // Delay navigation to allow message display
+      await Future.delayed(Duration(seconds: 2));
 
       await Navigator.pushReplacementNamed(
           context, "/signin"); // Navigate only if widget is still active

@@ -7,13 +7,13 @@ import 'package:sticky_note/signup.dart';
 import 'package:sticky_note/notes.dart';
 
 Future<void> main() async {
-   WidgetsFlutterBinding.ensureInitialized();
-   // ✅ Load .env from assets folder (for Flutter Web)
+  WidgetsFlutterBinding.ensureInitialized();
+  // ✅ Load .env from assets folder (for Flutter Web)
   await dotenv.load(fileName: "assets/.env");
 
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    initialRoute: '/notes',
+    initialRoute: '/signin',
     routes: {
       '/signin': (context) => SignInPage(),
       '/register': (context) => registerPage(),
