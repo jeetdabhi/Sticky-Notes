@@ -38,7 +38,7 @@ class _NewNotePageState extends State<NewNotePage> {
     if (title.isEmpty && content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Note is empty!'), backgroundColor: Colors.red),
+            content: Text('Note is empty!'), backgroundColor: Color.fromRGBO(40, 37, 37, 1)),
       );
       return;
     }
@@ -50,7 +50,7 @@ class _NewNotePageState extends State<NewNotePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('User not logged in! Please log in again.'),
-            backgroundColor: Colors.red),
+            backgroundColor: Color.fromRGBO(40, 37, 37, 1)),
       );
       return;
     }
@@ -87,7 +87,7 @@ class _NewNotePageState extends State<NewNotePage> {
             content: Text(isUpdating
                 ? 'Note updated successfully!'
                 : 'Note added successfully!'),
-            backgroundColor: Colors.green,
+            backgroundColor: Color.fromRGBO(40, 37, 37, 1),
           ),
         );
         Navigator.pop(context, true);
@@ -95,14 +95,14 @@ class _NewNotePageState extends State<NewNotePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Error: ${responseData['error']}'),
-              backgroundColor: Colors.red),
+              backgroundColor: Color.fromRGBO(40, 37, 37, 1)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text("Something went wrong. Please try again!"),
-            backgroundColor: Colors.red),
+            backgroundColor: Color.fromRGBO(40, 37, 37, 1)),
       );
     }
   }
@@ -196,12 +196,12 @@ class _NewNotePageState extends State<NewNotePage> {
       backgroundColor: const Color(0xFFF4F4F4),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        leading: isUpdating
+        leading: isUpdating // ✅ Show back button ONLY when editing
             ? IconButton(
                 icon: const Icon(Icons.arrow_back, color: Color(0xFFB1902B)),
                 onPressed: () => Navigator.pop(context),
               )
-            : null, // Hide back button for new notes
+            : null, // ❌ No back button for new notes
         title: Text(
           isUpdating ? "Edit Note" : "New Note",
           style: const TextStyle(

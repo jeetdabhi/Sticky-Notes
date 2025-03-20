@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:sticky_note/notes.dart';
 import 'dart:convert';
 import 'package:sticky_note/register.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -15,8 +16,6 @@ class _SigninPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
   bool _isPasswordVisible = false;
 
   Future<void> _submitForm() async {
@@ -42,23 +41,26 @@ class _SigninPageState extends State<SignInPage> {
 
           // Extract JWT token and userId
           final String token = data["token"];
-          final String userId =
-              data["userId"]; // ✅ Fix: Ensure userId is stored
+          final String userId = data["userId"]; // Store user ID
 
           // Save token and userId securely
           await storage.write(key: "jwt_token", value: token);
-          await storage.write(key: "user_id", value: userId); // ✅ Store user ID
+          await storage.write(key: "user_id", value: userId);
 
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Login Successful!")),
           );
 
-          // Wait for 1 second before navigating
+          // Wait for a short delay before navigation
           await Future.delayed(const Duration(seconds: 1));
 
-          // Navigate to Notes Page after successful login
-          Navigator.pushReplacementNamed(context, "/notes");
+          // Navigate to Notes Page and remove all previous routes
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => NotesListScreen()),
+            (route) => false, // Removes all previous routes
+          );
         } else {
           var errorData = jsonDecode(response.body);
 

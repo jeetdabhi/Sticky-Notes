@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -112,7 +111,7 @@ Future<void> logoutUser(BuildContext context) async {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Logged out successfully!"),
-          backgroundColor: Colors.green,
+          backgroundColor: Color.fromRGBO(40, 37, 37, 1), // Alpha is 1 (fully opaque)
         ),
       );
 
@@ -140,7 +139,7 @@ void _showMessage(BuildContext context, String message,
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
-      backgroundColor: isSuccess ? Colors.green : Colors.red,
+      backgroundColor: isSuccess ? Color.fromRGBO(40, 37, 37, 1) : Color.fromRGBO(40, 37, 37, 1),
     ),
   );
 }

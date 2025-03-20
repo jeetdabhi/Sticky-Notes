@@ -68,7 +68,7 @@ class OtpPopupState extends State<OtpPopup> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isSuccess ? Colors.green : Colors.red,
+        backgroundColor: isSuccess ? Color.fromRGBO(40, 37, 37, 1) : Color.fromRGBO(40, 37, 37, 1),
       ),
     );
   }

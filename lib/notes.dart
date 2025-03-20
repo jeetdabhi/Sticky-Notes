@@ -332,7 +332,7 @@ void showDeleteConfirmationDialog(
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text("Note deleted successfully!"),
-                          backgroundColor: Colors.green,
+                          backgroundColor: Color.fromRGBO(40, 37, 37, 1),
                           duration: Duration(seconds: 2),
                         ),
                       );
