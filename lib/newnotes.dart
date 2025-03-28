@@ -44,9 +44,8 @@ class _NewNotePageState extends State<NewNotePage> {
     }
 
     String? token = await storage.read(key: "jwt_token");
-    String? userId = await storage.read(key: "user_id");
 
-    if (token == null || userId == null) {
+    if (token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('User not logged in! Please log in again.'),

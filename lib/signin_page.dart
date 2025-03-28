@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:sticky_note/auth_service.dart';
 import 'package:sticky_note/notes.dart';
 import 'dart:convert';
 import 'package:sticky_note/register.dart';
@@ -17,11 +19,76 @@ class _SigninPageState extends State<SignInPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  final AuthService _authService = AuthService();
+  final storage = FlutterSecureStorage(); // ✅ Define storage globally
+
+  // ✅ Initialize Google Sign-In
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: dotenv.env['GOOGLE_CLIENT_ID'], // ✅ Fetch from .env
+    scopes: ['email', 'profile'],
+  );
+
+  // ✅ Google Sign-In Function
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return; // User canceled login
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      String? apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
+      var url = Uri.parse("$apiUrl/api/users/google-signin");
+
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"idToken": googleAuth.idToken}),
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+
+        // ✅ Extract JWT token and userId
+        final String token = data["token"];
+        final String userId = data["user"]["_id"]; // Assuming API sends user ID
+
+        // ✅ Save token & user ID securely
+        await storage.write(key: "jwt_token", value: token);
+        await storage.write(key: "user_id", value: userId);
+
+        // ✅ Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login Successful!")),
+        );
+
+        // ✅ Wait before navigation
+        await Future.delayed(const Duration(seconds: 1));
+
+        // ✅ Navigate to Notes Page and remove all previous routes
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => NotesListScreen()),
+          (route) => false, // Removes all previous routes
+        );
+      } else {
+        var errorData = jsonDecode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Google Sign-In Failed: ${errorData['error']}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Something went wrong. Please try again!")),
+      );
+    }
+  }
 
   Future<void> _submitForm() async {
-    String apiUrl =
-        dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
-    final storage = FlutterSecureStorage(); // Secure storage for token
+    String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
 
     if (_formKey.currentState!.validate()) {
       String email = emailController.text.trim();
@@ -36,40 +103,46 @@ class _SigninPageState extends State<SignInPage> {
           body: jsonEncode({"email": email, "password": password}),
         );
 
+        print("Response Status Code: ${response.statusCode}");
+
+        var data = jsonDecode(response.body);
+
+        print(data["token"]);
+
         if (response.statusCode == 200) {
           var data = jsonDecode(response.body);
 
-          // Extract JWT token and userId
-          final String token = data["token"];
-          final String userId = data["userId"]; // Store user ID
+          print("Data: ${data}");
 
-          // Save token and userId securely
+          if (data["token"] == null) {
+            print("Error: Missing token in response");
+            return;
+          }
+
+          final String? token = data["token"];
+
           await storage.write(key: "jwt_token", value: token);
-          await storage.write(key: "user_id", value: userId);
 
-          // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Login Successful!")),
           );
 
-          // Wait for a short delay before navigation
           await Future.delayed(const Duration(seconds: 1));
 
-          // Navigate to Notes Page and remove all previous routes
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => NotesListScreen()),
-            (route) => false, // Removes all previous routes
+            (route) => false,
           );
+
         } else {
           var errorData = jsonDecode(response.body);
-
-          // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Login Failed: ${errorData['error']}")),
           );
         }
       } catch (e) {
+        print("Login Error: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text("Something went wrong. Please try again!")),
@@ -158,7 +231,24 @@ class _SigninPageState extends State<SignInPage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, "/forgotpassword",
+                              arguments: {"email": emailController.text});
+                        },
+                        child: const Text(
+                          "Forgot Password!",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFB1902B),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 0),
                     ElevatedButton(
                       onPressed: _submitForm,
                       child: Text(
@@ -194,7 +284,7 @@ class _SigninPageState extends State<SignInPage> {
                     ),
                     SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _handleGoogleSignIn,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFFB1902B),
                         padding: EdgeInsets.symmetric(vertical: 15),
