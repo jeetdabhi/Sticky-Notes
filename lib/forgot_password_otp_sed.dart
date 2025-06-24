@@ -25,7 +25,7 @@ class _RegisterPageState extends State<forgotpassword> {
       try {
         String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
         final response = await http.post(
-          Uri.parse("$apiUrl/api/users/send-otp"),
+          Uri.parse("$apiUrl/api/auth/send-otp"),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({"email": emailController.text}),
         );
@@ -110,6 +110,21 @@ class _RegisterPageState extends State<forgotpassword> {
                   ),
                   SizedBox(height: 20),
 
+                    // "Or Register With" Text
+                    Row(
+                      children: [
+                        Expanded(
+                            child: Divider(thickness: 1, color: Colors.grey)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text("or signin",
+                              style: TextStyle(color: Colors.black54)),
+                        ),
+                        Expanded(
+                            child: Divider(thickness: 1, color: Colors.grey)),
+                      ],
+                    ),
+                    SizedBox(height: 20),
                   RichText(
                     text: TextSpan(
                       text: 'Already have an account? ',

@@ -43,7 +43,7 @@ class _SignUpPageState extends State<SignUpPage> {
         String apiUrl =
             dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
         final response = await http.post(
-          Uri.parse("$apiUrl/api/users/signup"),
+          Uri.parse("$apiUrl/api/auth/set-password"),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             "email": emailController.text.trim(),

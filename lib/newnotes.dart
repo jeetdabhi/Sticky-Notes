@@ -56,12 +56,12 @@ class _NewNotePageState extends State<NewNotePage> {
 
     String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
     var url = isUpdating
-        ? Uri.parse("$apiUrl/api/notes/update/${widget.note!['_id']}")
-        : Uri.parse("$apiUrl/api/notes/create");
+        ? Uri.parse("$apiUrl/notes/${widget.note!['_id']}")
+        : Uri.parse("$apiUrl/notes/create");
 
     try {
       var response = await (isUpdating
-          ? http.put(url,
+          ? http.patch(url,
               headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer $token"

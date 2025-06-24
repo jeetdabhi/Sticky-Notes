@@ -39,7 +39,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('$apiUrl/api/notes/all'),
+        Uri.parse('$apiUrl/notes'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json"
@@ -65,7 +65,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
 
     try {
       final response = await http.delete(
-        Uri.parse('$apiUrl/api/notes/delete/$noteId'),
+        Uri.parse('$apiUrl/notes/$noteId'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json"
@@ -166,8 +166,10 @@ class _NotesListScreenState extends State<NotesListScreen> {
                     padding: const EdgeInsets.all(12),
                     itemCount: filteredNotes.length,
                     itemBuilder: (context, index) {
-                      DateTime createdAt =
-                          DateTime.parse(filteredNotes[index]['createdAt']);
+                      String? createdAtStr = filteredNotes[index]['createdAt'];
+                      DateTime createdAt = createdAtStr != null
+                          ? DateTime.parse(createdAtStr)
+                          : DateTime.now(); // fallback to now or a default date
                       String formattedDate =
                           "${createdAt.day}/${createdAt.month}/${createdAt.year}";
                       return GestureDetector(

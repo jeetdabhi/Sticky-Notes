@@ -40,8 +40,12 @@ dependencies:
   flutter_dotenv: ^5.2.1
   flutter_secure_storage: ^9.2.4 # Use latest version
   flutter_launcher_icons: ^0.13.1
+  mockito: ^5.4.5
+  build_runner: ^2.4.15
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
 

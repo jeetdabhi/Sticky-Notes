@@ -47,7 +47,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       try {
         String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
         final response = await http.post(
-          Uri.parse("$apiUrl/api/users/reset-password"),
+          Uri.parse("$apiUrl/api/auth/reset-password"),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             "email": emailController.text.trim(),

@@ -50,7 +50,7 @@ class _SigninPageState extends State<SignInPage> {
         var data = jsonDecode(response.body);
 
         // ✅ Extract JWT token and userId
-        final String token = data["token"];
+        final String token = data["accessToken"];
         final String userId = data["user"]["_id"]; // Assuming API sends user ID
 
         // ✅ Save token & user ID securely
@@ -94,7 +94,7 @@ class _SigninPageState extends State<SignInPage> {
       String email = emailController.text.trim();
       String password = passwordController.text.trim();
 
-      var url = Uri.parse("$apiUrl/api/users/login");
+      var url = Uri.parse("$apiUrl/api/auth/login");
 
       try {
         var response = await http.post(
@@ -102,8 +102,7 @@ class _SigninPageState extends State<SignInPage> {
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({"email": email, "password": password}),
         );
-
-        print("Response Status Code: ${response.statusCode}");
+        
 
         var data = jsonDecode(response.body);
 
@@ -114,12 +113,12 @@ class _SigninPageState extends State<SignInPage> {
 
           print("Data: ${data}");
 
-          if (data["token"] == null) {
+          if (data["accessToken"] == null) {
             print("Error: Missing token in response");
             return;
           }
 
-          final String? token = data["token"];
+          final String? token = data["accessToken"];
 
           await storage.write(key: "jwt_token", value: token);
 
@@ -183,6 +182,7 @@ class _SigninPageState extends State<SignInPage> {
                     ),
                     SizedBox(height: 24),
                     TextFormField(
+                      key: Key('emailField'), // ✅ ADD THIS KEY
                       controller: emailController,
                       decoration: InputDecoration(
                         labelText: "Email Address",
@@ -202,6 +202,7 @@ class _SigninPageState extends State<SignInPage> {
                     ),
                     SizedBox(height: 12),
                     TextFormField(
+                      key: Key('passwordField'), // ✅ ADD THIS KEY
                       controller: passwordController,
                       obscureText: !_isPasswordVisible,
                       decoration: InputDecoration(
@@ -250,6 +251,7 @@ class _SigninPageState extends State<SignInPage> {
                     ),
                     SizedBox(height: 0),
                     ElevatedButton(
+                      key: Key('loginButton'), // ✅ ADD THIS KEY
                       onPressed: _submitForm,
                       child: Text(
                         'Log me in',
@@ -275,43 +277,43 @@ class _SigninPageState extends State<SignInPage> {
                             child: Divider(thickness: 1, color: Colors.grey)),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text("Or sign in with",
+                          child: Text("or register",
                               style: TextStyle(color: Colors.black54)),
                         ),
                         Expanded(
                             child: Divider(thickness: 1, color: Colors.grey)),
                       ],
                     ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _handleGoogleSignIn,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFB1902B),
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 5,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/1.jpg',
-                            width: 20,
-                            height: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Continue with Google',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
+                    SizedBox(height: 5),
+                    // ElevatedButton(
+                    //   onPressed: _handleGoogleSignIn,
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: Color(0xFFB1902B),
+                    //     padding: EdgeInsets.symmetric(vertical: 15),
+                    //     shape: RoundedRectangleBorder(
+                    //       borderRadius: BorderRadius.circular(10),
+                    //     ),
+                    //     elevation: 5,
+                    //   ),
+                    //   child: Row(
+                    //     mainAxisAlignment: MainAxisAlignment.center,
+                    //     children: [
+                    //       Image.asset(
+                    //         'assets/1.jpg',
+                    //         width: 20,
+                    //         height: 20,
+                    //       ),
+                    //       SizedBox(width: 8),
+                    //       Text(
+                    //         'Continue with Google',
+                    //         style: TextStyle(
+                    //             fontSize: 16,
+                    //             fontWeight: FontWeight.bold,
+                    //             color: Colors.white),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                     SizedBox(height: 20),
                     RichText(
                       text: TextSpan(

@@ -37,19 +37,19 @@ class OtpPopupState extends State<OtpPopup> {
     String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
     String otp = controllers.map((controller) => controller.text).join();
 
-    final url = Uri.parse('$apiUrl/api/users/verify-otp');
+    final url = Uri.parse('$apiUrl/api/auth/verify-reset-otp');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'otp': otp}),
     );
-
     setState(() => isLoading = false);
     final responseData = jsonDecode(response.body);
 
     if (!mounted) return;
-
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201 || response.statusCode == 204) {
+      print('Status Code: ${response.statusCode}'); // Prints the status code
+      print('Response Body: ${response.body}');
       String verifiedEmail = responseData['email'];
       _showMessage("OTP verified successfully!", isSuccess: true);
       removeOtpPopup();
@@ -59,6 +59,8 @@ class OtpPopupState extends State<OtpPopup> {
         arguments: {'email': verifiedEmail},
       );
     } else {
+      print('Status Code: ${response.statusCode}'); // Prints the status code
+      print('Response Body: ${response.body}');
       _showMessage(responseData['message'] ?? "Invalid OTP. Try again.");
     }
   }
@@ -124,7 +126,8 @@ class OtpPopupState extends State<OtpPopup> {
                                 focusNode: FocusNode(),
                                 onKeyEvent: (KeyEvent event) {
                                   if (event is KeyDownEvent &&
-                                      event.logicalKey == LogicalKeyboardKey.backspace) {
+                                      event.logicalKey ==
+                                          LogicalKeyboardKey.backspace) {
                                     _onBackspace(index);
                                   }
                                 },
@@ -140,7 +143,8 @@ class OtpPopupState extends State<OtpPopup> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
-                                  onChanged: (value) => _onKeyPress(value, index),
+                                  onChanged: (value) =>
+                                      _onKeyPress(value, index),
                                   onTap: () => controllers[index].clear(),
                                 ),
                               ),
@@ -160,7 +164,8 @@ class OtpPopupState extends State<OtpPopup> {
                             elevation: 5,
                           ),
                           child: isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white)
                               : const Text(
                                   'Verify',
                                   style: TextStyle(

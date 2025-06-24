@@ -100,7 +100,7 @@ Future<void> logoutUser(BuildContext context) async {
 
   try {
     final response = await http.post(
-      Uri.parse("$apiUrl/api/users/logout"),
+      Uri.parse("$apiUrl/api/auth/logout"),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Use the retrieved token

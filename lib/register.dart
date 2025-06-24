@@ -29,7 +29,7 @@ class _SignUpPageState extends State<registerPage> {
       try {
          String apiUrl = dotenv.env['API_URL'] ?? "http://localhost:3000"; // Fetch from .env
         final response = await http.post(
-          Uri.parse("$apiUrl/api/users/register"),
+          Uri.parse("$apiUrl/api/auth/register"),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             "email": emailController.text, // ✅ Ensure email is sent
@@ -152,45 +152,45 @@ class _SignUpPageState extends State<registerPage> {
                             child: Divider(thickness: 1, color: Colors.grey)),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text("Or register with",
+                          child: Text("or signin",
                               style: TextStyle(color: Colors.black54)),
                         ),
                         Expanded(
                             child: Divider(thickness: 1, color: Colors.grey)),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: 5),
 
                     // Google Sign-in Button
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFB1902B),
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 5,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/1.jpg',
-                            width: 20,
-                            height: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Continue with Google',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // ElevatedButton(
+                    //   onPressed: () {},
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: Color(0xFFB1902B),
+                    //     padding: EdgeInsets.symmetric(vertical: 15),
+                    //     shape: RoundedRectangleBorder(
+                    //       borderRadius: BorderRadius.circular(10),
+                    //     ),
+                    //     elevation: 5,
+                    //   ),
+                    //   child: Row(
+                    //     mainAxisAlignment: MainAxisAlignment.center,
+                    //     children: [
+                    //       Image.asset(
+                    //         'assets/1.jpg',
+                    //         width: 20,
+                    //         height: 20,
+                    //       ),
+                    //       SizedBox(width: 8),
+                    //       Text(
+                    //         'Continue with Google',
+                    //         style: TextStyle(
+                    //             fontSize: 16,
+                    //             fontWeight: FontWeight.bold,
+                    //             color: Colors.white),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                     SizedBox(height: 20),
 
                     // Sign In Link
